@@ -1375,8 +1375,8 @@
           // Container-Element (licensing-radio-field) stylen
           const radioField = element.closest('.licensing-radio-field');
           if (radioField) {
-            radioField.style.backgroundColor = "#f8faf8";
-            radioField.style.borderColor = "var(--graygreen--200)";
+            radioField.style.backgroundColor = "var(--graygreen--800)";
+            radioField.style.borderColor = "var(--graygreen--700)";
           }
 
           // Bild ausblenden
@@ -1388,13 +1388,13 @@
           // Schriftfarben zurücksetzen
           const priceInfo = element.parentElement.querySelector('.license-price-info');
           if (priceInfo) {
-            priceInfo.style.backgroundColor = 'var(--graygreen--200)';
-            priceInfo.style.color = 'var(--black)';
+            priceInfo.style.backgroundColor = 'var(--graygreen--900)';
+            priceInfo.style.color = 'var(--white)';
           }
 
           const radioLabel = element.parentElement.querySelector('.licensing-radio-label');
           if (radioLabel) {
-            radioLabel.style.color = 'var(--black)';
+            radioLabel.style.color = 'var(--white)';
           }
 
           return acc;
@@ -1404,8 +1404,8 @@
           // Container-Element (licensing-radio-field) stylen
           const radioField = element.closest('.licensing-radio-field');
           if (radioField) {
-            radioField.style.backgroundColor = "var(--yellow--100)";
-            radioField.style.borderColor = "var(--yellow--500)";
+            radioField.style.backgroundColor = "var(--yellow--900)";
+            radioField.style.borderColor = "var(--yellow--400)";
           }
 
           // Bild einblenden
@@ -1417,13 +1417,13 @@
           // Schriftfarben für aktiven Zustand
           const priceInfo = element.parentElement.querySelector('.license-price-info');
           if (priceInfo) {
-            priceInfo.style.backgroundColor = 'var(--yellow--200)';
-            priceInfo.style.color = 'var(--yellow--800)';
+            priceInfo.style.backgroundColor = 'var(--yellow--400)';
+            priceInfo.style.color = 'var(--yellow--900)';
           }
 
           const radioLabel = element.parentElement.querySelector('.licensing-radio-label');
           if (radioLabel) {
-            radioLabel.style.color = 'var(--yellow--800)';
+            radioLabel.style.color = 'var(--yellow--400)';
           }
         }
 
