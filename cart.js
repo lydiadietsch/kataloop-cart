@@ -1295,6 +1295,12 @@
 
       // Initialize MutationObserver for licenses-slider elements
       KataloopForm.initLicenseSliderObserver();
+
+      // Lizenz-Radios abwählbar machen (vormals separates Webflow-Script)
+      KataloopForm.initLicenseUncheck();
+
+      // Verzicht-Namensnennung / Unlimitiert-Toggles -> aktiven Slider setzen
+      KataloopForm.initLicenseToggles();
     },
 
     initLicenseSliderObserver: function () {
@@ -1465,6 +1471,65 @@
           }
         }
       }
+    },
+
+    // Macht die Lizenz-Radios abwählbar: zeigt die Uncheck-Fläche nur beim
+    // aktiven Radio, hebt beim Klick die Auswahl auf (inkl. Webflow-Klassen)
+    // und aktualisiert den Preis. Vormals separates Webflow-Custom-Code-Script.
+    initLicenseUncheck: function () {
+      document.querySelectorAll("#radio-field").forEach((radioField) => {
+        const radioInput = radioField.querySelector('input[type="radio"]');
+        const uncheckButton = radioField.querySelector(".uncheck-img-wrapper");
+        const checkDisplay = radioField.querySelector(".w-form-formradioinput");
+        if (radioInput && uncheckButton) {
+          uncheckButton.style.display = radioInput.checked ? "flex" : "none";
+          radioInput.addEventListener("change", function () {
+            document
+              .querySelectorAll(`input[name="${radioInput.name}"]`)
+              .forEach((radio) => {
+                if (radio != this) radio.checked = false;
+                const b = radio
+                  .closest("#radio-field")
+                  .querySelector(".uncheck-img-wrapper");
+                if (b) b.style.display = "none";
+              });
+            uncheckButton.style.display = this.checked ? "flex" : "none";
+          });
+          uncheckButton.addEventListener("click", function (e) {
+            e.preventDefault();
+            radioInput.checked = false;
+            uncheckButton.style.display = "none";
+            checkDisplay.classList.remove("w--redirected-checked");
+            checkDisplay.classList.remove("w--redirected-focus");
+            KataloopForm.updatePrice();
+          });
+        }
+      });
+    },
+
+    // Liest die Toggles cb-nc (Verzicht Namensnennung) und cb-unl (Unlimitiert)
+    // und setzt is-active auf den passenden .licenses-slider (data-key:
+    // std | nc | unl | unl-nc). Der Slider-Observer oben reagiert darauf.
+    initLicenseToggles: function () {
+      const nc = document.getElementById("cb-nc");
+      const unl = document.getElementById("cb-unl");
+      const sliders = document.querySelectorAll(".licenses-slider");
+      function getKey() {
+        const ncOn = nc && nc.checked;
+        const unlOn = unl && unl.checked;
+        if (!ncOn && !unlOn) return "std";
+        if (ncOn && !unlOn) return "nc";
+        if (!ncOn && unlOn) return "unl";
+        return "unl-nc";
+      }
+      function update() {
+        const key = getKey();
+        sliders.forEach((el) => {
+          el.classList.toggle("is-active", el.dataset.key === key);
+        });
+      }
+      [nc, unl].forEach((el) => el && el.addEventListener("change", update));
+      update();
     },
 
     clear: function () {
