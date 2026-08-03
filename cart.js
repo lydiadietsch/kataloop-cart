@@ -2404,6 +2404,10 @@
         "cart-counter"
       );
 
+      // Warenkorb-Icon erst einblenden, nachdem Cart.init() den Counter
+      // gesetzt hat – verhindert das Springen der Zahl beim Seitenaufbau.
+      document.documentElement.classList.add("cart-ready");
+
       if (window.location.href.indexOf('kauf-erfolgreich') > 0 || window.location.href.indexOf('en/purchase-successful') > 0) {
         recordPurchaseEvent();
         window.Cart.removeAll();
