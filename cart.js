@@ -1875,6 +1875,58 @@
     };
   }
 
+  // IDs der Blöcke, die im Neukunden-Formular sichtbar werden und in der
+  // Vorschau gesperrt/gedimmt werden. licensing-terms bzw.
+  // terms-and-conditions liegen innerhalb von proceed-to-payment und werden
+  // durch dessen Sperre mit abgedeckt.
+  const NEW_CUSTOMER_PREVIEW_LOCK_IDS = [
+    "checkout-account-not-existing",
+    "end-client-job-no",
+    "proceed-to-payment",
+  ];
+
+  // Zeigt beim Betreten des Checkouts (Items im Warenkorb, aber noch keine
+  // E-Mail bestätigt) eine Vorschau des Neukunden-Formulars an: dieselben
+  // Blöcke wie showNewCustomerForm(), aber OHNE Button-Verdrahtung, per
+  // `inert` nicht bedienbar und via Opacity gedimmt. So sieht der Nutzer
+  // vorab, welche Angaben ihn erwarten. Webflow bleibt unverändert.
+  function showNewCustomerFormPreview(type) {
+    const notExisting = document.getElementById("checkout-account-not-existing");
+    if (!notExisting) return;
+
+    notExisting.style.display = "block";
+    document.getElementById("end-client-job-no") &&
+      (document.getElementById("end-client-job-no").style.display = "flex");
+    document.getElementById("licensing-terms") &&
+      (document.getElementById("licensing-terms").style.display = "block");
+    document.getElementById("terms-and-conditions") &&
+      (document.getElementById("terms-and-conditions").style.display = "block");
+    document.getElementById("proceed-to-payment") &&
+      (document.getElementById("proceed-to-payment").style.display = "flex");
+    document.getElementById("checkout-account-existing") &&
+      (document.getElementById("checkout-account-existing").style.display =
+        "none");
+
+    // inert: gesamter Teilbaum nicht klick- und nicht fokussierbar (inkl. Tab).
+    NEW_CUSTOMER_PREVIEW_LOCK_IDS.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.inert = true;
+      el.style.opacity = "0.5";
+    });
+  }
+
+  // Hebt die Vorschau-Sperre wieder auf. Die display-Werte setzen
+  // showCustomerDetails()/showNewCustomerForm() anschließend ohnehin neu.
+  function clearNewCustomerFormPreview() {
+    NEW_CUSTOMER_PREVIEW_LOCK_IDS.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.inert = false;
+      el.style.opacity = "";
+    });
+  }
+
   function retrieveCustomer(email, type) {
     fetch(cloudFunctions.retrieveCustomer, {
       method: "POST",
@@ -1885,6 +1937,9 @@
     })
       .then((response) => response.json())
       .then((response) => {
+        // Vorschau-Sperre lösen, bevor das echte Formular übernimmt.
+        clearNewCustomerFormPreview();
+
         if (response.customer) {
           showCustomerDetails(response.customer, type);
         } else {
@@ -2146,6 +2201,10 @@
 
         document.getElementById("checkout-total-price").innerHTML =
           window.Cart.formatter.format(total / 100);
+
+        // Gedimmte Neukunden-Vorschau anzeigen, solange noch keine E-Mail
+        // bestätigt wurde.
+        showNewCustomerFormPreview("checkout");
       }
 
       else {
@@ -2250,6 +2309,10 @@
             };
           });
         }
+
+        // Gedimmte Neukunden-Vorschau anzeigen, solange noch keine E-Mail
+        // bestätigt wurde.
+        showNewCustomerFormPreview("subscription");
       } else {
         document.getElementById("no-items").style.display = "block";
         document.getElementById("checkout-items-wrapper").style.display =
