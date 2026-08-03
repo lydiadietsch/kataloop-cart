@@ -1692,9 +1692,9 @@
     document.getElementById("end-client-job-no") &&
       (document.getElementById("end-client-job-no").style.display = "flex");
     document.getElementById("licensing-terms") &&
-      (document.getElementById("licensing-terms").style.display = "block");
+      (document.getElementById("licensing-terms").style.display = "flex");
     document.getElementById("terms-and-conditions") &&
-      (document.getElementById("terms-and-conditions").style.display = "block");
+      (document.getElementById("terms-and-conditions").style.display = "flex");
     document.getElementById("proceed-to-payment").style.display = "flex";
     document.getElementById("checkout-account-not-existing").style.display =
       "none";
@@ -1789,6 +1789,11 @@
       if (countryInput?.value !== "DE") {
         hasMissingData = !checkTextElement(taxTypeInput) || hasMissingData
         hasMissingData = !checkTextElement(taxNumberInput) || hasMissingData
+      } else {
+        // DE: Steuerfelder sind optional → keine rote Markierung erzwingen
+        // bzw. eine bestehende entfernen.
+        if (taxTypeInput) taxTypeInput.style.borderColor = ''
+        if (taxNumberInput) taxNumberInput.style.borderColor = ''
       }
 
       if (!privacyCheckbox.checked) {
@@ -1807,9 +1812,9 @@
     document.getElementById("end-client-job-no") &&
       (document.getElementById("end-client-job-no").style.display = "flex");
     document.getElementById("licensing-terms") &&
-      (document.getElementById("licensing-terms").style.display = "block");
+      (document.getElementById("licensing-terms").style.display = "flex");
     document.getElementById("terms-and-conditions") &&
-      (document.getElementById("terms-and-conditions").style.display = "block");
+      (document.getElementById("terms-and-conditions").style.display = "flex");
     document.getElementById("proceed-to-payment").style.display = "flex";
     document.getElementById("checkout-account-existing").style.display = "none";
 
@@ -1898,9 +1903,9 @@
     document.getElementById("end-client-job-no") &&
       (document.getElementById("end-client-job-no").style.display = "flex");
     document.getElementById("licensing-terms") &&
-      (document.getElementById("licensing-terms").style.display = "block");
+      (document.getElementById("licensing-terms").style.display = "flex");
     document.getElementById("terms-and-conditions") &&
-      (document.getElementById("terms-and-conditions").style.display = "block");
+      (document.getElementById("terms-and-conditions").style.display = "flex");
     document.getElementById("proceed-to-payment") &&
       (document.getElementById("proceed-to-payment").style.display = "flex");
     document.getElementById("checkout-account-existing") &&
@@ -1913,6 +1918,16 @@
       if (!el) return;
       el.inert = true;
       el.style.opacity = "0.5";
+      // Felder zusätzlich hart deaktivieren, damit auch Browser-Autofill sie
+      // nicht befüllt. Nur zuvor aktive Felder markieren, damit beim Aufheben
+      // der bereits verwaltete disabled-Zustand (z.B. Steuerart ohne Land)
+      // nicht überschrieben wird.
+      el.querySelectorAll("input, select, textarea").forEach((field) => {
+        if (!field.disabled) {
+          field.disabled = true;
+          field.setAttribute("data-kl-preview-disabled", "");
+        }
+      });
     });
   }
 
@@ -1925,6 +1940,13 @@
       el.inert = false;
       el.style.opacity = "";
     });
+    // Für die Vorschau deaktivierte Felder wieder freigeben.
+    document
+      .querySelectorAll("[data-kl-preview-disabled]")
+      .forEach((field) => {
+        field.disabled = false;
+        field.removeAttribute("data-kl-preview-disabled");
+      });
   }
 
   function retrieveCustomer(email, type) {
@@ -2065,6 +2087,14 @@
     countrySelect.addEventListener("change", function () {
       populateTaxTypeDropdown(this.value);
     });
+
+    // Auf der deutschen URL (Pfad ohne /en-Segment) Deutschland vorauswählen
+    // und direkt die passende Steuerart-Liste laden.
+    const isGermanUrl = !/(^|\/)en(\/|$)/.test(window.location.pathname);
+    if (isGermanUrl) {
+      countrySelect.value = "DE";
+      populateTaxTypeDropdown("DE");
+    }
   }
 
   // Add this function after the populateCountryDropdown function
@@ -2111,6 +2141,12 @@
     }
 
     if (countryCode === "DE") {
+      // Steuerart & -nummer sind bei DE nicht Pflicht → eine evtl. aus einer
+      // vorherigen Länderauswahl gesetzte rote Markierung wieder entfernen.
+      taxTypeSelect.style.borderColor = "";
+      const deTaxNumber = document.getElementById("checkout-tax-number");
+      if (deTaxNumber) deTaxNumber.style.borderColor = "";
+
       document.getElementById("tax-id-info-note")?.classList.add("u-d-none")
       document.getElementById("tax-id-type-germany-subscription")?.classList.remove("u-d-none")
       document.getElementById("tax-id-germany-subscription")?.classList.remove("u-d-none")
