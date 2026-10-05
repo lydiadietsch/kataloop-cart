@@ -1252,6 +1252,10 @@
       priceLabel,
       priceField
     ) {
+      // Lizenzformular gibt es nur auf Stock-Detailseiten – überall sonst
+      // still abbrechen (cart.js läuft wegen des Mini-Warenkorbs seitenweit).
+      if (!document.getElementById(formId)) return;
+
       KataloopForm.formatter = new Intl.NumberFormat(
         document.documentElement.lang,
         { style: "currency", currency: "EUR" }
@@ -2036,10 +2040,8 @@
     const taxTypeSelect = document.getElementById(
       "checkout-type-of-tax-number"
     );
-    if (!countrySelect) {
-      console.error("Country select not found");
-      return;
-    }
+    // Länderauswahl gibt es nur im Checkout – sonst still abbrechen.
+    if (!countrySelect) return;
     if (!taxTypeSelect) {
       console.error("Tax type select not found");
       return;
@@ -2507,7 +2509,8 @@
           }
         ]
       })
-    } else {
+    } else if (KataloopForm.form) {
+      // Nur melden, wenn ein Lizenzformular da ist, der Button aber fehlt.
       console.error("Add to cart button not found");
     }
 
