@@ -2369,29 +2369,35 @@
         transaction_id: transactionId,
         ...mapCartToGtag()
       });
-    } else {
-      console.error("Google Analytics gtag() is not available.");
     }
+    // Ohne gtag hat jemand Analytics abgelehnt – das ist kein Fehler.
   }
 
   function recordSubscriptionEvent() {
-    if (typeof gtag === 'function') {
-      const subscription = localStorage.getItem('subscription');
-      const transactionId = new URLSearchParams(window.location.search).get('session_id');
+    // Der gespeicherte Plan ist der Beleg für einen echten Checkout. Ohne ihn
+    // (Direktaufruf, Reload) darf kein Kauf gemeldet werden – setup() löscht
+    // ihn direkt nach diesem Aufruf.
+    const subscription = localStorage.getItem('subscription');
+    if (!subscription || typeof gtag !== 'function') return;
 
-      // Send a purchase event to Google Analytics
-      gtag('event', 'purchase', {
-        transaction_id: transactionId,
-        currency: "EUR",
-        items: {
+    // Kommt Stripe noch über die alte Adresse zurück, verwirft Webflows
+    // 301-Weiterleitung die session_id. Ohne transaction_id führt GA4 den Kauf
+    // als „(not set)", deshalb dann eine eigene eindeutige ID.
+    const transactionId = new URLSearchParams(window.location.search).get('session_id')
+      || 'abo-' + Date.now();
+
+    // Send a purchase event to Google Analytics
+    gtag('event', 'purchase', {
+      transaction_id: transactionId,
+      currency: "EUR",
+      items: [
+        {
           item_id: subscription,
           item_name: subscription,
           quantity: 1,
         },
-      });
-    } else {
-      console.error("Google Analytics gtag() is not available.");
-    }
+      ],
+    });
   }
 
   // Modify the existing setup function to call populateCountryDropdown
@@ -2413,7 +2419,7 @@
       if (window.location.href.indexOf('kauf-erfolgreich') > 0 || window.location.href.indexOf('en/purchase-successful') > 0) {
         recordPurchaseEvent();
         window.Cart.removeAll();
-      } else if (window.location.href.indexOf('abonnement-erfolgreich') > 0 || window.location.href.indexOf('en/subscription-successful') > 0) {
+      } else if (window.location.href.indexOf('buchung-erfolgreich') > 0 || window.location.href.indexOf('en/booking-successful') > 0) {
         recordSubscriptionEvent();
         localStorage.removeItem('subscription');
       }
