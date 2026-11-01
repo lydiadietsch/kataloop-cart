@@ -1643,11 +1643,21 @@
     }
   }
 
+  // Lizenzen eines Artikels als lesbarer Text für Analytics – immer die deutsche
+  // Bezeichnung, damit DE- und EN-Käufe zusammenlaufen. Die Lizenzen sind
+  // Objekte, ein direktes join() ergab "[object Object]". Darf nie werfen:
+  // das hängt am Checkout.
+  function licenseVariant(item) {
+    return Object.values(item.licenses || {})
+      .map((license) => (license && license.label && license.label.de) || (license && license.ID) || "")
+      .join(" + ");
+  }
+
   function mapCartItemToGtag(item, index) {
     return {
       item_id: item.ID,
       item_name: item.title,
-      item_variant: item.licenses.join(","),
+      item_variant: licenseVariant(item),
       price: item.price / 100,
       quantity: 1,
       index
@@ -2018,7 +2028,7 @@
         {
           item_id: item.ID,
           item_name: item.title,
-          item_variant: item.licenses.join(","),
+          item_variant: licenseVariant(item),
           price: item.price / 100,
           quantity: 1
         }
@@ -2361,16 +2371,18 @@
   }
 
   function recordPurchaseEvent() {
-    if (typeof gtag === 'function') {
-      const transactionId = new URLSearchParams(window.location.search).get('session_id');
+    // Ein leerer Warenkorb heißt: kein frischer Kauf (Direktaufruf, Reload) –
+    // setup() leert ihn direkt nach diesem Aufruf. Ohne gtag hat jemand
+    // Analytics abgelehnt, das ist kein Fehler.
+    if (!window.Cart.cart.length || typeof gtag !== 'function') return;
 
-      // Send a purchase event to Google Analytics
-      gtag('event', 'purchase', {
-        transaction_id: transactionId,
-        ...mapCartToGtag()
-      });
-    }
-    // Ohne gtag hat jemand Analytics abgelehnt – das ist kein Fehler.
+    const transactionId = new URLSearchParams(window.location.search).get('session_id');
+
+    // Send a purchase event to Google Analytics
+    gtag('event', 'purchase', {
+      transaction_id: transactionId,
+      ...mapCartToGtag()
+    });
   }
 
   function recordSubscriptionEvent() {
