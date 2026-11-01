@@ -2517,9 +2517,9 @@
 
       const product = document.getElementById("product-data").dataset;
 
+      // Ohne currency/value: der Preis hängt von der Lizenzwahl ab und steht beim
+      // Aufruf noch nicht fest (vorher fest 30,03 USD für jedes Motiv).
       (typeof gtag === "function") && gtag("event", "view_item", {
-        currency: "USD",
-        value: 30.03,
         items: [
           {
             item_id: product.id,
